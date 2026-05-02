@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Clock,
   LogOut,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,7 +26,6 @@ function formatDate(date: Date | string | null) {
   });
 }
 
-// ─── Post Form ─────────────────────────────────────────────────────────────────
 interface PostFormProps {
   initial?: {
     id?: number;
@@ -54,7 +54,7 @@ function PostForm({ initial, onSave, onCancel }: PostFormProps) {
 
   const createMutation = trpc.blog.create.useMutation({
     onSuccess: () => {
-      toast.success("Article créé avec succès !");
+      toast.success("Article créé.");
       utils.blog.adminList.invalidate();
       utils.blog.list.invalidate();
       onSave();
@@ -64,7 +64,7 @@ function PostForm({ initial, onSave, onCancel }: PostFormProps) {
 
   const updateMutation = trpc.blog.update.useMutation({
     onSuccess: () => {
-      toast.success("Article mis à jour !");
+      toast.success("Article mis à jour.");
       utils.blog.adminList.invalidate();
       utils.blog.list.invalidate();
       onSave();
@@ -76,6 +76,7 @@ function PostForm({ initial, onSave, onCancel }: PostFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (initial?.id) {
       updateMutation.mutate({ id: initial.id, ...form });
     } else {
@@ -83,79 +84,81 @@ function PostForm({ initial, onSave, onCancel }: PostFormProps) {
     }
   };
 
-  const labelClass = "block font-nav text-[oklch(0.40_0.04_250)] mb-2";
-  const labelStyle = { fontSize: "0.65rem", letterSpacing: "0.12em" };
   const inputClass =
     "w-full bg-white border border-[oklch(0.88_0.01_250)] text-[oklch(0.22_0.06_250)] px-4 py-3 font-body focus:outline-none focus:border-[oklch(0.72_0.10_78)] transition-colors duration-200";
-  const inputStyle = { fontSize: "0.95rem" };
+
+  const labelClass = "block font-nav text-[oklch(0.40_0.04_250)] mb-2";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="md:col-span-2">
-          <label className={labelClass} style={labelStyle}>TITRE *</label>
-          <input
-            type="text"
-            required
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className={inputClass}
-            style={inputStyle}
-            placeholder="Titre de l'article"
-          />
-        </div>
-
-        <div>
-          <label className={labelClass} style={labelStyle}>CATÉGORIE</label>
-          <input
-            type="text"
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-            className={inputClass}
-            style={inputStyle}
-            placeholder="ex. Leadership, Coaching, Transition..."
-          />
-        </div>
-
-        <div>
-          <label className={labelClass} style={labelStyle}>IMAGE DE COUVERTURE (URL)</label>
-          <input
-            type="url"
-            value={form.coverImage}
-            onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
-            className={inputClass}
-            style={inputStyle}
-            placeholder="https://..."
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className={labelClass} style={labelStyle}>RÉSUMÉ (EXTRAIT)</label>
-          <textarea
-            rows={2}
-            value={form.excerpt}
-            onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-            className={`${inputClass} resize-none`}
-            style={inputStyle}
-            placeholder="Courte description affichée dans la liste des articles..."
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className={labelClass} style={labelStyle}>CONTENU * (Markdown supporté)</label>
-          <textarea
-            required
-            rows={18}
-            value={form.content}
-            onChange={(e) => setForm({ ...form, content: e.target.value })}
-            className={`${inputClass} resize-y font-mono`}
-            style={{ fontSize: "0.88rem" }}
-            placeholder="Rédigez votre article en Markdown...&#10;&#10;## Titre de section&#10;&#10;Votre contenu ici..."
-          />
-        </div>
+      <div>
+        <label className={labelClass} style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+          TITRE *
+        </label>
+        <input
+          type="text"
+          required
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          className={inputClass}
+          placeholder="Titre de l'article"
+        />
       </div>
 
-      {/* Publish toggle */}
+      <div>
+        <label className={labelClass} style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+          CATÉGORIE
+        </label>
+        <input
+          type="text"
+          value={form.category}
+          onChange={(e) => setForm({ ...form, category: e.target.value })}
+          className={inputClass}
+          placeholder="ex. Leadership, Coaching, Transition..."
+        />
+      </div>
+
+      <div>
+        <label className={labelClass} style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+          IMAGE DE COUVERTURE URL
+        </label>
+        <input
+          type="url"
+          value={form.coverImage}
+          onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
+          className={inputClass}
+          placeholder="https://..."
+        />
+      </div>
+
+      <div>
+        <label className={labelClass} style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+          RÉSUMÉ
+        </label>
+        <textarea
+          rows={3}
+          value={form.excerpt}
+          onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+          className={`${inputClass} resize-none`}
+          placeholder="Courte description affichée dans la liste des articles..."
+        />
+      </div>
+
+      <div>
+        <label className={labelClass} style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+          CONTENU * — MARKDOWN ACCEPTÉ
+        </label>
+        <textarea
+          required
+          rows={18}
+          value={form.content}
+          onChange={(e) => setForm({ ...form, content: e.target.value })}
+          className={`${inputClass} resize-y font-mono`}
+          style={{ fontSize: "0.88rem" }}
+          placeholder="## Titre de section&#10;&#10;Votre contenu ici..."
+        />
+      </div>
+
       <div className="flex items-center gap-4 p-4 bg-[oklch(0.95_0.005_85)] border border-[oklch(0.88_0.01_250)]">
         <button
           type="button"
@@ -170,19 +173,22 @@ function PostForm({ initial, onSave, onCancel }: PostFormProps) {
             }`}
           />
         </button>
+
         <div>
-          <div className="font-nav text-[oklch(0.22_0.06_250)]" style={{ fontSize: "0.75rem", letterSpacing: "0.08em", fontWeight: 600 }}>
+          <div
+            className="font-nav text-[oklch(0.22_0.06_250)]"
+            style={{ fontSize: "0.75rem", letterSpacing: "0.08em", fontWeight: 600 }}
+          >
             {form.published ? "PUBLIÉ" : "BROUILLON"}
           </div>
           <div className="font-body text-[oklch(0.55_0.04_250)]" style={{ fontSize: "0.8rem" }}>
             {form.published
-              ? "L'article sera visible sur le blog public."
-              : "L'article ne sera pas visible par les visiteurs."}
+              ? "L’article sera visible sur le blog public."
+              : "L’article ne sera pas visible par les visiteurs."}
           </div>
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-4">
         <button
           type="submit"
@@ -193,6 +199,7 @@ function PostForm({ initial, onSave, onCancel }: PostFormProps) {
           <Save size={14} />
           {isLoading ? "ENREGISTREMENT..." : "ENREGISTRER"}
         </button>
+
         <button
           type="button"
           onClick={onCancel}
@@ -206,13 +213,12 @@ function PostForm({ initial, onSave, onCancel }: PostFormProps) {
   );
 }
 
-// ─── Main Admin Page ───────────────────────────────────────────────────────────
 export default function AdminBlog() {
   const [, navigate] = useLocation();
+
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  // Use our own admin auth (independent of Manus OAuth)
   const { data: adminUser, isLoading: authLoading } = trpc.adminAuth.me.useQuery();
 
   const { data: posts, isLoading: postsLoading } = trpc.blog.adminList.useQuery(undefined, {
@@ -250,6 +256,12 @@ export default function AdminBlog() {
     onError: (e) => toast.error(e.message),
   });
 
+  useEffect(() => {
+    if (!authLoading && !adminUser) {
+      navigate("/admin/login");
+    }
+  }, [authLoading, adminUser, navigate]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[oklch(0.97_0.005_85)] flex items-center justify-center">
@@ -258,19 +270,10 @@ export default function AdminBlog() {
     );
   }
 
-  useEffect(() => {
-    if (!authLoading && !adminUser) {
-      navigate("/admin/login");
-    }
-  }, [authLoading, adminUser, navigate]);
-
-  if (!authLoading && !adminUser) {
-    return null;
-  }
+  if (!adminUser) return null;
 
   return (
     <div className="min-h-screen bg-[oklch(0.97_0.005_85)]">
-      {/* Admin Header */}
       <header
         className="sticky top-0 z-50 border-b border-white/10"
         style={{ background: "oklch(0.22 0.06 250)" }}
@@ -284,7 +287,9 @@ export default function AdminBlog() {
             >
               <ArrowLeft size={13} /> RETOUR AU SITE
             </Link>
+
             <div className="h-4 w-px bg-white/20" />
+
             <div className="flex items-center gap-2">
               <BookOpen size={16} className="text-[oklch(0.72_0.10_78)]" />
               <span className="font-display text-white" style={{ fontSize: "1.1rem", fontWeight: 600 }}>
@@ -292,7 +297,16 @@ export default function AdminBlog() {
               </span>
             </div>
           </div>
+
           <div className="flex items-center gap-4">
+            <Link
+              href="/admin/users"
+              className="flex items-center gap-2 font-nav text-white/60 hover:text-white transition-colors"
+              style={{ fontSize: "0.7rem", letterSpacing: "0.08em" }}
+            >
+              <Users size={14} /> ADMINS
+            </Link>
+
             <Link
               href="/blog"
               className="font-nav text-white/60 hover:text-white transition-colors"
@@ -300,25 +314,25 @@ export default function AdminBlog() {
             >
               VOIR LE BLOG
             </Link>
+
             <span className="font-body text-white/40" style={{ fontSize: "0.8rem" }}>
-              {adminUser?.name}
+              {adminUser.name}
             </span>
+
             <button
               onClick={() => logoutMutation.mutate()}
-              className="flex items-center gap-2 font-nav text-white/40 hover:text-white transition-colors"
-              style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}
-              title="Se déconnecter"
+              className="flex items-center gap-2 font-nav text-white/60 hover:text-white transition-colors"
+              style={{ fontSize: "0.7rem", letterSpacing: "0.08em" }}
             >
-              <LogOut size={13} />
+              <LogOut size={14} /> DÉCONNEXION
             </button>
           </div>
         </div>
       </header>
 
-      <div className="container py-12">
+      <main className="container py-12">
         {view === "list" && (
           <>
-            {/* List header */}
             <div className="flex items-center justify-between mb-10">
               <div>
                 <h1
@@ -331,6 +345,7 @@ export default function AdminBlog() {
                   {posts?.length ?? 0} article{(posts?.length ?? 0) !== 1 ? "s" : ""} au total
                 </p>
               </div>
+
               <button
                 onClick={() => setView("create")}
                 className="flex items-center gap-3 font-nav text-[oklch(0.18_0.04_250)] bg-[oklch(0.72_0.10_78)] hover:bg-[oklch(0.78_0.08_85)] px-6 py-3 transition-all duration-300"
@@ -340,7 +355,6 @@ export default function AdminBlog() {
               </button>
             </div>
 
-            {/* Posts table */}
             {postsLoading ? (
               <div className="text-center py-20">
                 <div className="w-8 h-8 border-2 border-[oklch(0.72_0.10_78)] border-t-transparent rounded-full animate-spin mx-auto" />
@@ -348,23 +362,39 @@ export default function AdminBlog() {
             ) : !posts || posts.length === 0 ? (
               <div className="text-center py-24 bg-white border border-[oklch(0.88_0.01_250)]">
                 <BookOpen size={32} className="text-[oklch(0.75_0.02_250)] mx-auto mb-4" />
-                <p className="font-body text-[oklch(0.55_0.04_250)]">Aucun article. Créez votre premier article !</p>
+                <p className="font-body text-[oklch(0.55_0.04_250)]">
+                  Aucun article. Créez votre premier article.
+                </p>
               </div>
             ) : (
-              <div className="bg-white border border-[oklch(0.88_0.01_250)]">
+              <div className="bg-white border border-[oklch(0.88_0.01_250)] overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-[oklch(0.92_0.01_250)]">
-                      <th className="text-left p-5 font-nav text-[oklch(0.55_0.04_250)]" style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>TITRE</th>
-                      <th className="text-left p-5 font-nav text-[oklch(0.55_0.04_250)] hidden md:table-cell" style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>CATÉGORIE</th>
-                      <th className="text-left p-5 font-nav text-[oklch(0.55_0.04_250)]" style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>STATUT</th>
-                      <th className="text-left p-5 font-nav text-[oklch(0.55_0.04_250)] hidden lg:table-cell" style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>DATE</th>
-                      <th className="text-right p-5 font-nav text-[oklch(0.55_0.04_250)]" style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>ACTIONS</th>
+                      <th className="text-left p-5 font-nav text-[oklch(0.55_0.04_250)]" style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+                        TITRE
+                      </th>
+                      <th className="text-left p-5 font-nav text-[oklch(0.55_0.04_250)] hidden md:table-cell" style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+                        CATÉGORIE
+                      </th>
+                      <th className="text-left p-5 font-nav text-[oklch(0.55_0.04_250)]" style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+                        STATUT
+                      </th>
+                      <th className="text-left p-5 font-nav text-[oklch(0.55_0.04_250)] hidden lg:table-cell" style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+                        DATE
+                      </th>
+                      <th className="text-right p-5 font-nav text-[oklch(0.55_0.04_250)]" style={{ fontSize: "0.65rem", letterSpacing: "0.12em" }}>
+                        ACTIONS
+                      </th>
                     </tr>
                   </thead>
+
                   <tbody>
                     {posts.map((post) => (
-                      <tr key={post.id} className="border-b border-[oklch(0.95_0.005_85)] hover:bg-[oklch(0.98_0.003_85)] transition-colors">
+                      <tr
+                        key={post.id}
+                        className="border-b border-[oklch(0.95_0.005_85)] hover:bg-[oklch(0.98_0.003_85)] transition-colors"
+                      >
                         <td className="p-5">
                           <div className="font-body text-[oklch(0.22_0.06_250)] font-medium" style={{ fontSize: "0.95rem" }}>
                             {post.title}
@@ -375,6 +405,7 @@ export default function AdminBlog() {
                             </div>
                           )}
                         </td>
+
                         <td className="p-5 hidden md:table-cell">
                           {post.category ? (
                             <span
@@ -387,6 +418,7 @@ export default function AdminBlog() {
                             <span className="text-[oklch(0.75_0.02_250)]">—</span>
                           )}
                         </td>
+
                         <td className="p-5">
                           <button
                             onClick={() => togglePublish.mutate({ id: post.id, published: !post.published })}
@@ -395,39 +427,50 @@ export default function AdminBlog() {
                             {post.published ? (
                               <>
                                 <CheckCircle size={14} className="text-green-500" />
-                                <span className="font-nav text-green-600" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>PUBLIÉ</span>
+                                <span className="font-nav text-green-600" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
+                                  PUBLIÉ
+                                </span>
                               </>
                             ) : (
                               <>
                                 <Clock size={14} className="text-[oklch(0.65_0.04_250)]" />
-                                <span className="font-nav text-[oklch(0.65_0.04_250)]" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>BROUILLON</span>
+                                <span className="font-nav text-[oklch(0.65_0.04_250)]" style={{ fontSize: "0.65rem", letterSpacing: "0.08em" }}>
+                                  BROUILLON
+                                </span>
                               </>
                             )}
                           </button>
                         </td>
+
                         <td className="p-5 hidden lg:table-cell">
                           <span className="font-body text-[oklch(0.60_0.04_250)]" style={{ fontSize: "0.82rem" }}>
                             {formatDate(post.createdAt)}
                           </span>
                         </td>
+
                         <td className="p-5">
                           <div className="flex items-center justify-end gap-2">
                             {post.published && (
                               <Link
                                 href={`/blog/${post.slug}`}
                                 className="p-2 text-[oklch(0.65_0.04_250)] hover:text-[oklch(0.55_0.12_235)] transition-colors"
-                                title="Voir l'article"
+                                title="Voir l’article"
                               >
                                 <Eye size={15} />
                               </Link>
                             )}
+
                             <button
-                              onClick={() => { setEditingId(post.id); setView("edit"); }}
+                              onClick={() => {
+                                setEditingId(post.id);
+                                setView("edit");
+                              }}
                               className="p-2 text-[oklch(0.65_0.04_250)] hover:text-[oklch(0.22_0.06_250)] transition-colors"
                               title="Modifier"
                             >
                               <Edit2 size={15} />
                             </button>
+
                             <button
                               onClick={() => {
                                 if (confirm(`Supprimer "${post.title}" ?`)) {
@@ -460,16 +503,16 @@ export default function AdminBlog() {
               >
                 <ArrowLeft size={13} /> RETOUR
               </button>
+
               <div className="h-4 w-px bg-[oklch(0.85_0.01_250)]" />
+
               <h1 className="font-display text-[oklch(0.18_0.04_250)]" style={{ fontSize: "1.8rem", fontWeight: 500 }}>
                 Nouvel article
               </h1>
             </div>
+
             <div className="max-w-3xl">
-              <PostForm
-                onSave={() => setView("list")}
-                onCancel={() => setView("list")}
-              />
+              <PostForm onSave={() => setView("list")} onCancel={() => setView("list")} />
             </div>
           </>
         )}
@@ -478,17 +521,23 @@ export default function AdminBlog() {
           <>
             <div className="flex items-center gap-4 mb-10">
               <button
-                onClick={() => { setView("list"); setEditingId(null); }}
+                onClick={() => {
+                  setView("list");
+                  setEditingId(null);
+                }}
                 className="flex items-center gap-2 font-nav text-[oklch(0.55_0.04_250)] hover:text-[oklch(0.22_0.06_250)] transition-colors"
                 style={{ fontSize: "0.7rem", letterSpacing: "0.1em" }}
               >
                 <ArrowLeft size={13} /> RETOUR
               </button>
+
               <div className="h-4 w-px bg-[oklch(0.85_0.01_250)]" />
+
               <h1 className="font-display text-[oklch(0.18_0.04_250)]" style={{ fontSize: "1.8rem", fontWeight: 500 }}>
-                Modifier l'article
+                Modifier l’article
               </h1>
             </div>
+
             <div className="max-w-3xl">
               <PostForm
                 initial={{
@@ -500,13 +549,19 @@ export default function AdminBlog() {
                   coverImage: editPost.coverImage ?? undefined,
                   published: editPost.published,
                 }}
-                onSave={() => { setView("list"); setEditingId(null); }}
-                onCancel={() => { setView("list"); setEditingId(null); }}
+                onSave={() => {
+                  setView("list");
+                  setEditingId(null);
+                }}
+                onCancel={() => {
+                  setView("list");
+                  setEditingId(null);
+                }}
               />
             </div>
           </>
         )}
-      </div>
+      </main>
     </div>
   );
 }

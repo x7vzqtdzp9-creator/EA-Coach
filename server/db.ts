@@ -147,7 +147,7 @@ export async function deletePost(id: number) {
   await db.delete(blogPosts).where(eq(blogPosts.id, id));
 }
 
-// ─── Admin account helpers ──────────────────────────────────────────────────────────────────────────────
+// ─── Admin account helpers ────────────────────────────────────────────────────
 
 export async function getAdminByEmail(email: string) {
   const db = await getDb();
@@ -171,6 +171,12 @@ export async function getAdminById(id: number) {
   return result[0];
 }
 
+export async function getAllAdminAccounts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(adminAccounts).orderBy(desc(adminAccounts.createdAt));
+}
+
 export async function createAdminAccount(data: { email: string; password: string; name: string }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -182,6 +188,12 @@ export async function createAdminAccount(data: { email: string; password: string
   };
   await db.insert(adminAccounts).values(insert);
   return getAdminByEmail(data.email);
+}
+
+export async function deleteAdminAccount(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(adminAccounts).where(eq(adminAccounts.id, id));
 }
 
 export async function verifyAdminPassword(email: string, password: string) {

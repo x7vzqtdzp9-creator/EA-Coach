@@ -18,6 +18,7 @@ import Home from "./pages/Home";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import AdminBlog from "./pages/AdminBlog";
+import AdminUsers from "./pages/AdminUsers";
 import AdminLogin from "./pages/AdminLogin";
 import AdminSetup from "./pages/AdminSetup";
 import MentionsLegales from "./pages/MentionsLegales";
@@ -41,9 +42,12 @@ function Router() {
       <Route path={"/contact"} component={Contact} />
       <Route path={"/blog"} component={Blog} />
       <Route path={"/blog/:slug"} component={BlogPost} />
+
       <Route path={"/admin/blog"} component={AdminBlog} />
+      <Route path={"/admin/users"} component={AdminUsers} />
       <Route path={"/admin/login"} component={AdminLogin} />
       <Route path={"/admin/setup"} component={AdminSetup} />
+
       <Route path={"/mentions-legales"} component={MentionsLegales} />
       <Route path={"/politique-de-confidentialite"} component={PolitiqueConfidentialite} />
       <Route path={"/404"} component={NotFound} />

@@ -7,8 +7,11 @@ import {
   countAdminAccounts,
   createAdminAccount,
   createPost,
+  deleteAdminAccount,
   deletePost,
+  getAllAdminAccounts,
   getAllPosts,
+  getAdminByEmail,
   getAdminById,
   getPostById,
   getPostBySlug,
@@ -96,7 +99,7 @@ export const appRouter = router({
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(ADMIN_COOKIE_NAME, token, {
           ...cookieOptions,
-          maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+          maxAge: 1000 * 60 * 60 * 24 * 30,
         });
         return { id: admin.id, email: admin.email, name: admin.name };
       }),
@@ -110,29 +113,101 @@ export const appRouter = router({
 
     // Setup first admin account (only works when no admin account exists)
     setup: publicProcedure
-      .input(z.object({
-        email: z.string().email(),
-        password: z.string().min(8, "Le mot de passe doit faire au moins 8 caractères"),
-        name: z.string().min(2),
-        setupKey: z.string(),
-      }))
+      .input(
+        z.object({
+          email: z.string().email(),
+          password: z.string().min(8, "Le mot de passe doit faire au moins 8 caractères"),
+          name: z.string().min(2),
+          setupKey: z.string(),
+        })
+      )
       .mutation(async ({ input }) => {
-        // Prevent setup if accounts already exist
         const count = await countAdminAccounts();
         if (count > 0) {
           throw new TRPCError({ code: "FORBIDDEN", message: "Un compte admin existe déjà." });
         }
-        // Verify setup key against ADMIN_SETUP_KEY env variable
+
         const expectedKey = process.env.ADMIN_SETUP_KEY ?? "";
         if (!expectedKey || input.setupKey !== expectedKey) {
           throw new TRPCError({ code: "UNAUTHORIZED", message: "Clé de configuration incorrecte." });
         }
+
         const admin = await createAdminAccount({
           email: input.email,
           password: input.password,
           name: input.name,
         });
+
         return { success: true, email: admin?.email };
+      }),
+
+    // Admin: list all admin accounts
+    listAdmins: blogAdminProcedure.query(async () => {
+      const admins = await getAllAdminAccounts();
+
+      return admins.map((admin) => ({
+        id: admin.id,
+        email: admin.email,
+        name: admin.name,
+        createdAt: admin.createdAt,
+      }));
+    }),
+
+    // Admin: create another admin account
+    createAdmin: blogAdminProcedure
+      .input(
+        z.object({
+          email: z.string().email(),
+          password: z.string().min(8, "Le mot de passe doit faire au moins 8 caractères"),
+          name: z.string().min(2, "Le nom doit faire au moins 2 caractères"),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const existing = await getAdminByEmail(input.email);
+
+        if (existing) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Un compte admin existe déjà avec cette adresse email.",
+          });
+        }
+
+        const admin = await createAdminAccount({
+          email: input.email,
+          password: input.password,
+          name: input.name,
+        });
+
+        return {
+          id: admin?.id,
+          email: admin?.email,
+          name: admin?.name,
+        };
+      }),
+
+    // Admin: delete an admin account
+    deleteAdmin: blogAdminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        if (input.id === ctx.adminUser.id) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Vous ne pouvez pas supprimer votre propre compte.",
+          });
+        }
+
+        const count = await countAdminAccounts();
+
+        if (count <= 1) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Impossible de supprimer le dernier compte admin.",
+          });
+        }
+
+        await deleteAdminAccount(input.id);
+
+        return { success: true };
       }),
   }),
 
