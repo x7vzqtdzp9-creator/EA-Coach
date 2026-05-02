@@ -189,7 +189,7 @@ export default function AdminSetup() {
                   onChange={(e) => setForm({ ...form, setupKey: e.target.value })}
                   className="w-full bg-white/5 border border-white/10 text-white pl-10 pr-4 py-3 font-body focus:outline-none focus:border-[oklch(0.72_0.10_78)] transition-colors"
                   style={{ fontSize: "0.95rem" }}
-                  placeholder="16 premiers caractères du JWT_SECRET"
+                  placeholder="ADMIN_SETUP_KEY"
                 />
               </div>
             </div>
