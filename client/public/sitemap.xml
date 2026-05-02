@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>https://eacoach.fr/</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/a-propos</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/services</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/coaching-professionnel</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/coaching-individuel</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/accompagnement-solidaire</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/blog</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/contact</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/mentions-legales</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/politique-de-confidentialite</loc>
+  </url>
+
+  <url>
+  <loc>https://eacoach.fr/coaching-manager-nantes</loc>
+  <priority>0.9</priority>
+</url>
+
+<url>
+  <loc>https://eacoach.fr/coaching-equipe-nantes</loc>
+  <priority>0.8</priority>
+</url>
+
+<url>
+  <loc>https://eacoach.fr/coaching-organisation-nantes</loc>
+  <priority>0.8</priority>
+</url>
+
+</urlset>
