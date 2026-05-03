@@ -1,308 +1,59 @@
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { ADMIN_COOKIE_NAME } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
-import { publicProcedure, router } from "./_core/trpc";
-import {
-  countAdminAccounts,
-  createAdminAccount,
-  createPost,
-  deleteAdminAccount,
-  deletePost,
-  getAllAdminAccounts,
-  getAllPosts,
-  getAdminByEmail,
-  getAdminById,
-  getPostById,
-  getPostBySlug,
-  getPublishedPosts,
-  updatePost,
-  verifyAdminPassword,
-} from "./db";
-import { SignJWT, jwtVerify } from "jose";
+import { publicProcedure, router } from "./trpc";
+import { TRPCError } from "@trpc/server";
+import bcrypt from "bcrypt";
 
-// ─── JWT helpers for admin session ─────────────────────────────────────────────
-const ADMIN_JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ? `admin_${process.env.JWT_SECRET}` : "admin_fallback_secret_change_me"
-);
+export const adminRouter = router({
+  setup: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email(),
+        password: z.string().min(6),
+        name: z.string().min(1),
+        setupKey: z.string().min(1),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      // 🔐 Récupération et nettoyage des clés
+      const expectedKey = process.env.ADMIN_SETUP_KEY?.trim() ?? "";
+      const receivedKey = input.setupKey.trim();
 
-async function signAdminToken(adminId: number): Promise<string> {
-  return new SignJWT({ adminId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("30d")
-    .sign(ADMIN_JWT_SECRET);
-}
-
-async function verifyAdminToken(token: string): Promise<{ adminId: number } | null> {
-  try {
-    const { payload } = await jwtVerify(token, ADMIN_JWT_SECRET);
-    return { adminId: payload.adminId as number };
-  } catch {
-    return null;
-  }
-}
-
-// Blog admin guard using our own admin cookie (independent of Manus OAuth)
-const blogAdminProcedure = publicProcedure.use(async ({ ctx, next }) => {
-  const token = ctx.req.cookies?.[ADMIN_COOKIE_NAME];
-  if (!token) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "Connexion admin requise." });
-  }
-  const payload = await verifyAdminToken(token);
-  if (!payload) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "Session expirée. Reconnectez-vous." });
-  }
-  const admin = await getAdminById(payload.adminId);
-  if (!admin) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "Compte admin introuvable." });
-  }
-  return next({ ctx: { ...ctx, adminUser: admin } });
-});
-
-// Slug generator
-function toSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .slice(0, 100);
-}
-
-export const appRouter = router({
-  // ─── Admin auth (email + password) ───────────────
-  adminAuth: router({
-    // Check current admin session
-    me: publicProcedure.query(async ({ ctx }) => {
-      const token = ctx.req.cookies?.[ADMIN_COOKIE_NAME];
-      if (!token) return null;
-      const payload = await verifyAdminToken(token);
-      if (!payload) return null;
-      const admin = await getAdminById(payload.adminId);
-      if (!admin) return null;
-      return { id: admin.id, email: admin.email, name: admin.name };
-    }),
-
-    // Login with email + password
-    login: publicProcedure
-      .input(z.object({ email: z.string().email(), password: z.string().min(1) }))
-      .mutation(async ({ input, ctx }) => {
-        const admin = await verifyAdminPassword(input.email, input.password);
-        if (!admin) {
-          throw new TRPCError({ code: "UNAUTHORIZED", message: "Email ou mot de passe incorrect." });
-        }
-        const token = await signAdminToken(admin.id);
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(ADMIN_COOKIE_NAME, token, {
-          ...cookieOptions,
-          maxAge: 1000 * 60 * 60 * 24 * 30,
+      // ❌ Vérification clé
+      if (!expectedKey || receivedKey !== expectedKey) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Clé de configuration incorrecte.",
         });
-        return { id: admin.id, email: admin.email, name: admin.name };
-      }),
+      }
 
-    // Logout
-    logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(ADMIN_COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return { success: true };
-    }),
+      // 🔍 Vérifie si un admin existe déjà
+      const existingAdmin = await ctx.db.user.findFirst({
+        where: { role: "ADMIN" },
+      });
 
-    // Setup first admin account (only works when no admin account exists)
-    setup: publicProcedure
-      .input(
-        z.object({
-          email: z.string().email(),
-          password: z.string().min(8, "Le mot de passe doit faire au moins 8 caractères"),
-          name: z.string().min(2),
-          setupKey: z.string(),
-        })
-      )
-      .mutation(async ({ input }) => {
-        const count = await countAdminAccounts();
-        if (count > 0) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Un compte admin existe déjà." });
-        }
+      if (existingAdmin) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Un administrateur existe déjà.",
+        });
+      }
 
-        const expectedKey = process.env.ADMIN_SETUP_KEY ?? "";
-        if (!expectedKey || input.setupKey !== expectedKey) {
-          throw new TRPCError({ code: "UNAUTHORIZED", message: "Clé de configuration incorrecte." });
-        }
+      // 🔐 Hash du mot de passe
+      const hashedPassword = await bcrypt.hash(input.password, 10);
 
-        const admin = await createAdminAccount({
+      // 👤 Création admin
+      const admin = await ctx.db.user.create({
+        data: {
           email: input.email,
-          password: input.password,
+          password: hashedPassword,
           name: input.name,
-        });
+          role: "ADMIN",
+        },
+      });
 
-        return { success: true, email: admin?.email };
-      }),
-
-    // Admin: list all admin accounts
-    listAdmins: blogAdminProcedure.query(async () => {
-      const admins = await getAllAdminAccounts();
-
-      return admins.map((admin) => ({
-        id: admin.id,
-        email: admin.email,
-        name: admin.name,
-        createdAt: admin.createdAt,
-      }));
+      return {
+        success: true,
+        adminId: admin.id,
+      };
     }),
-
-    // Admin: create another admin account
-    createAdmin: blogAdminProcedure
-      .input(
-        z.object({
-          email: z.string().email(),
-          password: z.string().min(8, "Le mot de passe doit faire au moins 8 caractères"),
-          name: z.string().min(2, "Le nom doit faire au moins 2 caractères"),
-        })
-      )
-      .mutation(async ({ input }) => {
-        const existing = await getAdminByEmail(input.email);
-
-        if (existing) {
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: "Un compte admin existe déjà avec cette adresse email.",
-          });
-        }
-
-        const admin = await createAdminAccount({
-          email: input.email,
-          password: input.password,
-          name: input.name,
-        });
-
-        return {
-          id: admin?.id,
-          email: admin?.email,
-          name: admin?.name,
-        };
-      }),
-
-    // Admin: delete an admin account
-    deleteAdmin: blogAdminProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input, ctx }) => {
-        if (input.id === ctx.adminUser.id) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Vous ne pouvez pas supprimer votre propre compte.",
-          });
-        }
-
-        const count = await countAdminAccounts();
-
-        if (count <= 1) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Impossible de supprimer le dernier compte admin.",
-          });
-        }
-
-        await deleteAdminAccount(input.id);
-
-        return { success: true };
-      }),
-  }),
-
-  blog: router({
-    // Public: list published posts
-    list: publicProcedure.query(async () => {
-      return getPublishedPosts();
-    }),
-
-    // Public: get single post by slug
-    bySlug: publicProcedure
-      .input(z.object({ slug: z.string() }))
-      .query(async ({ input }) => {
-        const post = await getPostBySlug(input.slug);
-        if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Article introuvable." });
-        return post;
-      }),
-
-    // Admin: list all posts (published + drafts)
-    adminList: blogAdminProcedure.query(async () => {
-      return getAllPosts();
-    }),
-
-    // Admin: get post by id (for editing)
-    adminById: blogAdminProcedure
-      .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        const post = await getPostById(input.id);
-        if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Article introuvable." });
-        return post;
-      }),
-
-    // Admin: create post
-    create: blogAdminProcedure
-      .input(
-        z.object({
-          title: z.string().min(3).max(255),
-          content: z.string().min(10),
-          excerpt: z.string().optional(),
-          category: z.string().optional(),
-          coverImage: z.string().optional(),
-          published: z.boolean().default(false),
-        })
-      )
-      .mutation(async ({ input, ctx }) => {
-        const slug = toSlug(input.title);
-        const post = await createPost({
-          title: input.title,
-          slug,
-          content: input.content,
-          excerpt: input.excerpt ?? null,
-          category: input.category ?? null,
-          coverImage: input.coverImage ?? null,
-          published: input.published,
-          authorId: ctx.adminUser.id,
-          publishedAt: input.published ? new Date() : null,
-        });
-        return post;
-      }),
-
-    // Admin: update post
-    update: blogAdminProcedure
-      .input(
-        z.object({
-          id: z.number(),
-          title: z.string().min(3).max(255).optional(),
-          content: z.string().min(10).optional(),
-          excerpt: z.string().optional(),
-          category: z.string().optional(),
-          coverImage: z.string().optional(),
-          published: z.boolean().optional(),
-        })
-      )
-      .mutation(async ({ input }) => {
-        const { id, ...data } = input;
-        const existing = await getPostById(id);
-        if (!existing) throw new TRPCError({ code: "NOT_FOUND" });
-
-        const updateData: Record<string, unknown> = { ...data };
-        if (data.title) updateData.slug = toSlug(data.title);
-        if (data.published && !existing.published) {
-          updateData.publishedAt = new Date();
-        }
-
-        return updatePost(id, updateData as Parameters<typeof updatePost>[1]);
-      }),
-
-    // Admin: delete post
-    delete: blogAdminProcedure
-      .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
-        await deletePost(input.id);
-        return { success: true };
-      }),
-  }),
 });
-
-export type AppRouter = typeof appRouter;
