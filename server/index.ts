@@ -1,30 +1,41 @@
 import express from "express";
-import { createServer } from "http";
+import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
+
+import { appRouter } from "./routers";
+import { createContext } from "./_core/context";
+import { createExpressMiddleware } from "@trpc/server/adapters/express";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function startServer() {
-  const app = express();
-  const server = createServer(app);
+const app = express();
 
-  // Serve static files from dist/public in production
-  const staticPath =
-    process.env.NODE_ENV === "production"
-      ? path.resolve(__dirname, "public")
-      : path.resolve(__dirname, "..", "dist", "public");
+app.use(cookieParser());
+app.use(express.json());
 
-  app.use(express.static(staticPath));
+/* -------- API -------- */
+app.use(
+  "/trpc",
+  createExpressMiddleware({
+    router: appRouter,
+    createContext,
+  })
+);
 
-  // Handle client-side routing - serve index.html for all routes
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(staticPath, "index.html"));
-  });
+/* -------- FRONTEND -------- */
+const clientPath = path.join(__dirname, "../dist/public");
 
-  // Port is defined in server/_core/index.ts
-  // This file is kept for backward compatibility
-}
+app.use(express.static(clientPath));
 
-startServer().catch(console.error);
+app.get("*", (req, res) => {
+  res.sendFile(path.join(clientPath, "index.html"));
+});
+
+/* -------- START -------- */
+const port = Number(process.env.PORT || 3000);
+
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server running on port ${port}`);
+});
