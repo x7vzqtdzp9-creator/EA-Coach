@@ -15,7 +15,6 @@ const app = express();
 app.use(cookieParser());
 app.use(express.json());
 
-/* -------- API TRPC -------- */
 app.use(
   "/trpc",
   createExpressMiddleware({
@@ -24,16 +23,14 @@ app.use(
   })
 );
 
-/* -------- FRONTEND (VITE BUILD) -------- */
-const clientPath = path.join(__dirname, "../../dist/public");
+const clientPath = path.join(__dirname, "public");
 
 app.use(express.static(clientPath));
 
-app.get("*", (req, res) => {
+app.get("*", (_req, res) => {
   res.sendFile(path.join(clientPath, "index.html"));
 });
 
-/* -------- START SERVER -------- */
 const port = Number(process.env.PORT || 3000);
 
 app.listen(port, "0.0.0.0", () => {
