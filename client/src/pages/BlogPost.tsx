@@ -2,11 +2,10 @@ import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
 import { Link, useParams } from "wouter";
 import { Calendar, Tag, ArrowLeft, ArrowRight } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 function formatDate(date: Date | string | null) {
   if (!date) return "";
+
   return new Date(date).toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
@@ -16,7 +15,12 @@ function formatDate(date: Date | string | null) {
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
-  const { data: post, isLoading, error } = trpc.blog.bySlug.useQuery({ slug: slug ?? "" });
+
+  const {
+    data: post,
+    isLoading,
+    error,
+  } = trpc.blog.bySlug.useQuery({ slug: slug ?? "" });
 
   if (isLoading) {
     return (
@@ -34,13 +38,17 @@ export default function BlogPost() {
       <div className="min-h-screen bg-[oklch(0.97_0.005_85)]">
         <Navbar />
         <div className="container py-40 text-center">
-          <h1 className="font-display text-[oklch(0.22_0.06_250)] text-3xl mb-4">Article introuvable</h1>
+          <h1 className="font-display text-[oklch(0.22_0.06_250)] text-3xl mb-4">
+            Article introuvable
+          </h1>
+
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 font-nav text-[oklch(0.55_0.12_235)] hover:text-[oklch(0.72_0.10_78)] transition-colors"
             style={{ fontSize: "0.75rem", letterSpacing: "0.1em" }}
           >
-            <ArrowLeft size={13} /> RETOUR AU BLOG
+            <ArrowLeft size={13} />
+            RETOUR AU BLOG
           </Link>
         </div>
       </div>
@@ -51,7 +59,6 @@ export default function BlogPost() {
     <div className="min-h-screen bg-[oklch(0.97_0.005_85)]">
       <Navbar />
 
-      {/* Hero */}
       <section
         className="relative pt-32 pb-16 overflow-hidden"
         style={{ background: "oklch(0.22 0.06 250)" }}
@@ -66,13 +73,15 @@ export default function BlogPost() {
             }}
           />
         )}
+
         <div className="container relative z-10 max-w-3xl mx-auto">
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 font-nav text-white/50 hover:text-white mb-8 transition-colors"
             style={{ fontSize: "0.7rem", letterSpacing: "0.1em" }}
           >
-            <ArrowLeft size={13} /> RETOUR AU BLOG
+            <ArrowLeft size={13} />
+            RETOUR AU BLOG
           </Link>
 
           {post.category && (
@@ -89,7 +98,11 @@ export default function BlogPost() {
 
           <h1
             className="font-display text-white mb-6"
-            style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)", fontWeight: 500, lineHeight: 1.2 }}
+            style={{
+              fontSize: "clamp(1.8rem, 4vw, 3rem)",
+              fontWeight: 500,
+              lineHeight: 1.2,
+            }}
           >
             {post.title}
           </h1>
@@ -112,46 +125,54 @@ export default function BlogPost() {
         </div>
       </section>
 
-      {/* Content */}
       <section className="py-16">
-        <div className="container max-w-3xl mx-auto">
+        <article className="container max-w-3xl mx-auto">
           <div
-            className="font-body text-[oklch(0.30_0.04_250)] prose prose-lg max-w-none"
-            style={{ lineHeight: 1.85 }}
-          >
-            <div className="prose prose-invert max-w-none"><ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown></div>
-          </div>
+            className="font-body text-[oklch(0.30_0.04_250)] max-w-none
+              [&_h1]:font-display [&_h1]:text-[2rem] [&_h1]:text-[oklch(0.18_0.04_250)] [&_h1]:mb-6
+              [&_h2]:font-display [&_h2]:text-[1.55rem] [&_h2]:text-[oklch(0.18_0.04_250)] [&_h2]:mt-10 [&_h2]:mb-4
+              [&_p]:mb-5 [&_p]:leading-[1.85]
+              [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-6
+              [&_li]:mb-2
+              [&_a]:text-[oklch(0.55_0.12_235)] [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-[oklch(0.72_0.10_78)]"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
 
-          {/* Back to blog */}
           <div className="mt-16 pt-8 border-t border-[oklch(0.88_0.01_250)]">
             <Link
               href="/blog"
               className="inline-flex items-center gap-3 font-nav text-[oklch(0.22_0.06_250)] border-b-2 border-[oklch(0.72_0.10_78)] pb-1 hover:text-[oklch(0.72_0.10_78)] transition-colors duration-200"
-              style={{ fontSize: "0.75rem", letterSpacing: "0.12em", fontWeight: 600 }}
+              style={{
+                fontSize: "0.75rem",
+                letterSpacing: "0.12em",
+                fontWeight: 600,
+              }}
             >
-              <ArrowLeft size={13} /> RETOUR AU BLOG
+              <ArrowLeft size={13} />
+              RETOUR AU BLOG
             </Link>
           </div>
-        </div>
+        </article>
       </section>
 
-      {/* CTA */}
-      <section
-        className="py-16"
-        style={{ background: "oklch(0.14 0.045 250)" }}
-      >
+      <section className="py-16" style={{ background: "oklch(0.14 0.045 250)" }}>
         <div className="container text-center">
           <p className="font-body text-white/50 mb-4" style={{ fontSize: "0.9rem" }}>
             Cet article vous a inspiré ? Parlons de votre situation.
           </p>
-          <a
-            href="/#contact"
+
+          <Link
+            href="/contact"
             className="inline-flex items-center gap-3 font-nav text-[oklch(0.18_0.04_250)] bg-[oklch(0.72_0.10_78)] hover:bg-[oklch(0.78_0.08_85)] px-8 py-4 transition-all duration-300"
-            style={{ fontSize: "0.75rem", letterSpacing: "0.15em", fontWeight: 700 }}
+            style={{
+              fontSize: "0.75rem",
+              letterSpacing: "0.15em",
+              fontWeight: 700,
+            }}
           >
             NOUS CONTACTER
             <ArrowRight size={14} />
-          </a>
+          </Link>
         </div>
       </section>
     </div>
