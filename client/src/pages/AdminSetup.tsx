@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import {
   KeyRound,
@@ -23,14 +23,15 @@ export default function AdminSetup() {
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showSetupKey, setShowSetupKey] = useState(false);
 
-  const setupMutation = trpc.admin.setup.useMutation({
+  const setupMutation = trpc.adminAuth.setup.useMutation({
     onSuccess: () => {
       toast.success("Compte administrateur créé");
-      navigate("/admin/blog");
+      navigate("/admin/login");
     },
     onError: (error) => {
-      toast.error(error.message || "Erreur lors de la création");
+      toast.error(error.message || "Impossible de créer le compte");
     },
   });
 
@@ -69,24 +70,29 @@ export default function AdminSetup() {
             <h1 className="text-3xl font-semibold tracking-tight">
               Création admin
             </h1>
+
             <p className="mt-3 text-sm text-slate-300">
-              Configurez votre premier compte administrateur.
+              Configurez le premier compte administrateur du blog.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Nom */}
             <div>
               <label className="block text-sm font-medium text-slate-200 mb-2">
                 Nom
               </label>
+
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, name: e.target.value }))
+                    setForm((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
                   }
                   className="w-full rounded-xl border border-white/10 bg-white/10 pl-12 pr-4 py-3 text-white placeholder:text-slate-400 outline-none focus:border-blue-300/60 focus:ring-2 focus:ring-blue-400/20"
                   placeholder="Votre nom"
@@ -94,18 +100,22 @@ export default function AdminSetup() {
               </div>
             </div>
 
-            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-slate-200 mb-2">
                 Email
               </label>
+
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+
                 <input
                   type="email"
                   value={form.email}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, email: e.target.value }))
+                    setForm((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
                   }
                   className="w-full rounded-xl border border-white/10 bg-white/10 pl-12 pr-4 py-3 text-white placeholder:text-slate-400 outline-none focus:border-blue-300/60 focus:ring-2 focus:ring-blue-400/20"
                   placeholder="admin@email.com"
@@ -113,7 +123,6 @@ export default function AdminSetup() {
               </div>
             </div>
 
-            {/* Mot de passe avec visibilité */}
             <div>
               <label className="block text-sm font-medium text-slate-200 mb-2">
                 Mot de passe
@@ -133,7 +142,6 @@ export default function AdminSetup() {
                   }
                   className="w-full rounded-xl border border-white/10 bg-white/10 pl-12 pr-12 py-3 text-white placeholder:text-slate-400 outline-none focus:border-blue-300/60 focus:ring-2 focus:ring-blue-400/20"
                   placeholder="Mot de passe"
-                  autoComplete="new-password"
                 />
 
                 <button
@@ -150,15 +158,16 @@ export default function AdminSetup() {
               </div>
             </div>
 
-            {/* Setup key */}
             <div>
               <label className="block text-sm font-medium text-slate-200 mb-2">
                 Clé de configuration
               </label>
+
               <div className="relative">
                 <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+
                 <input
-                  type="text"
+                  type={showSetupKey ? "text" : "password"}
                   value={form.setupKey}
                   onChange={(e) =>
                     setForm((prev) => ({
@@ -166,9 +175,21 @@ export default function AdminSetup() {
                       setupKey: e.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-white/10 bg-white/10 pl-12 pr-4 py-3 text-white placeholder:text-slate-400 outline-none focus:border-blue-300/60 focus:ring-2 focus:ring-blue-400/20"
+                  className="w-full rounded-xl border border-white/10 bg-white/10 pl-12 pr-12 py-3 text-white placeholder:text-slate-400 outline-none focus:border-blue-300/60 focus:ring-2 focus:ring-blue-400/20"
                   placeholder="ADMIN_SETUP_KEY"
                 />
+
+                <button
+                  type="button"
+                  onClick={() => setShowSetupKey((prev) => !prev)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                >
+                  {showSetupKey ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -177,16 +198,18 @@ export default function AdminSetup() {
               disabled={setupMutation.isPending}
               className="w-full rounded-xl bg-blue-500 px-5 py-3 font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {setupMutation.isPending ? "Création..." : "Créer le compte"}
+              {setupMutation.isPending
+                ? "Création..."
+                : "Créer le compte administrateur"}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <Link
-              href="/admin/login"
+              href="/"
               className="text-sm text-slate-300 hover:text-white transition"
             >
-              Déjà un compte ? Se connecter
+              Retour au site
             </Link>
           </div>
         </div>

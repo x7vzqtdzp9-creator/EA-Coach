@@ -14,7 +14,7 @@ export default function AdminLogin() {
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const loginMutation = trpc.admin.login.useMutation({
+  const loginMutation = trpc.adminAuth.login.useMutation({
     onSuccess: () => {
       toast.success("Connexion réussie");
       navigate("/admin/blog");
