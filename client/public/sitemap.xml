@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
+  <!-- Pages principales -->
+
   <url>
     <loc>https://eacoach.fr/</loc>
   </url>
@@ -26,6 +28,18 @@
   </url>
 
   <url>
+    <loc>https://eacoach.fr/coaching-manager-nantes</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/coaching-equipe-nantes</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/coaching-organisation-nantes</loc>
+  </url>
+
+  <url>
     <loc>https://eacoach.fr/blog</loc>
   </url>
 
@@ -41,19 +55,46 @@
     <loc>https://eacoach.fr/politique-de-confidentialite</loc>
   </url>
 
+  <!-- Articles de blog -->
+
   <url>
-  <loc>https://eacoach.fr/coaching-manager-nantes</loc>
-  <priority>0.9</priority>
-</url>
+    <loc>https://eacoach.fr/blog/comment-savoir-si-vous-avez-besoin-d-un-coach-professionnel</loc>
+  </url>
 
-<url>
-  <loc>https://eacoach.fr/coaching-equipe-nantes</loc>
-  <priority>0.8</priority>
-</url>
+  <url>
+    <loc>https://eacoach.fr/blog/burn-out-les-signes-a-reperer-avant-qu-il-ne-soit-trop-tard</loc>
+  </url>
 
-<url>
-  <loc>https://eacoach.fr/coaching-organisation-nantes</loc>
-  <priority>0.8</priority>
-</url>
+  <url>
+    <loc>https://eacoach.fr/blog/combien-coute-un-coaching-professionnel-en-france</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/blog/coaching-ou-therapie-quelles-differences-et-que-choisir</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/blog/pourquoi-votre-equipe-manque-de-motivation-et-comment-y-remedier</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/blog/dirigeant-comment-prendre-de-meilleures-decisions-quand-on-est-seul</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/blog/pourquoi-vous-n-arrivez-pas-a-avancer-dans-votre-travail-et-comment-debloquer-la-situation</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/blog/charge-mentale-au-travail-pourquoi-les-dirigeants-n-arrivent-plus-a-deconnecter</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/blog/pourquoi-les-managers-ont-du-mal-a-deleguer-et-pourquoi-cela-les-epuise</loc>
+  </url>
+
+  <url>
+    <loc>https://eacoach.fr/blog/fatigue-decisionnelle-pourquoi-les-dirigeants-finissent-par-prendre-de-mauvaises-decisions</loc>
+  </url>
 
 </urlset>
